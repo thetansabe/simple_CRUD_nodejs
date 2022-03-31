@@ -1,0 +1,160 @@
+<div class="container">
+    <a href="/users/add" class="btn btn-success active" role="button" aria-pressed="true">Them nguoi dung</a>
+    
+    <h3 class="my-3">Chon mot nguoi dung de xem chi tiet</h3>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">STT</th>
+                <th scope="col">Ho va ten</th>
+                <th scope="col">Tuoi</th>
+                <th scope="col">Email</th>
+                <th scope="col">Thao tac</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+    <div class="mt-3">
+        Tong so nguoi dung: <span class="total-user text-danger"></span>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Xoa mot nguoi</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="message-text" class="col-form-label">Ban co chac muon xoa nguoi nay: </label>
+            <span class="font-weight-bold person-name_receiver"></span>     
+        </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+            <button type="button" class="btn btn-danger handle-delete">Xoa</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function renderUI(){
+        fetch('https://web-nang-cao.herokuapp.com/lab5/users',{method:'get'})
+        .then(res => res.json())
+        .then(data => {
+            let count = 1
+            const tbody = document.querySelector('tbody')
+
+            data.forEach(person => {
+                let tr = document.createElement('tr')
+                tr.setAttribute('person_id', person.id)
+                
+                const content = `   <th scope="row">${count}</th>
+                                    <td>
+                                        <a  href='https://web-nang-cao.herokuapp.com/lab5/users/${person.id}'>
+                                            ${person.name}
+                                        </a>
+                                    </td>
+                                    <td>${person.age}</td>
+                                    <td>${person.email}</td>
+
+                                    <td>
+                                        <a href="/users/update/${person.id}" 
+                                            class="btn btn-outline-primary" 
+                                            role="button" aria-pressed="true">
+                                            
+                                            Update
+                                        </a>
+                                        
+                                        <button 
+                                            class='btn btn-outline-danger' 
+                                            data-toggle="modal" data-target="#delete-modal" data-id ="${person.id}" data-name="${person.name}"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>`
+
+                count++
+                tr.innerHTML = content
+                //tr.setAttribute('class','d-flex align-items-center')
+
+                tbody.appendChild(tr)
+            })
+
+            document.querySelector('.total-user').innerHTML = count - 1
+        })
+    }
+    
+    //phai cho DOM duoc load
+    document.addEventListener('DOMContentLoaded', () => {
+        renderUI()
+        
+        let personId = -1
+				//tuong tac voi modal thong qua data-id -> attribute cua the a
+        $('#delete-modal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            personId = button.data('id') // Extract info from data-* attributes
+            
+            //load info ra modal
+            var personName = button.data('name')
+            var modal = $(this)
+            modal.find('.person-name_receiver').text(personName)
+
+            console.log(personId)
+        })
+
+        //xac nhan -> thuc hien xoa
+        document.querySelector('.handle-delete').onclick = () => {
+            fetch(`https://web-nang-cao.herokuapp.com/lab5/users/${personId}`, {
+              'method': 'delete',
+            })
+            .then(res => res.json())
+            .then(data => {
+                let flash = {}
+                if(data.code == 0){
+                    flash = {
+                        type: 'success',
+                        intro: 'Delete successfully',
+                        message: data.message
+                    }
+
+                }else{
+                    flash = {
+                        type: 'danger',
+                        intro: 'Delete person failed',
+                        message: 'unknown error'
+                    }
+                }
+
+                fetch('/delete', {
+                    'method': 'post',
+                    'headers': {'Content-Type' : 'application/json'},
+                    'body': JSON.stringify(flash)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data)
+                    return window.location.href = '/'
+                })
+                .catch(err => console.log(err))
+                
+            })
+            .catch(err => {
+                console.log(err)
+            })
+        }
+        
+    })
+</script>
