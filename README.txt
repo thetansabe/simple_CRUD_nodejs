@@ -6,7 +6,7 @@ form (front end) <-> router.method (node js) <-> axios request den REST api
 *do đó cần xử lí bất đồng bộ khá nhiều
 - Các thư viện đã dùng:
 cookie-parse
-express-session
+express-session -> flash message
 method-override
 cors
 router
